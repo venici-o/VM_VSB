@@ -5,11 +5,11 @@
 #include <stdint.h>
 
 enum { PAGINAS = 256, TAM = 256 };
-#ifndef FRAMES
-#define FRAMES 256
-#endif
+enum { FRAMES = 128 };
 
 static int tabela[PAGINAS], usados;
+static int ocupante[FRAMES], pagina_lru;
+static size_t idade[FRAMES];
 static int8_t memoria[FRAMES][TAM];
 static size_t total, faltas, hits;
 
@@ -39,15 +39,25 @@ static int traduzir(int addr, FILE *store, FILE *saida)
     int pagina = addr / TAM, offset = addr % TAM;
     int frame = tabela[pagina];
     if (frame < 0) {
-        frame = usados++;
+        if (usados < FRAMES) {
+            frame = usados++;
+        } else {
+            frame = 0;
+            for (int i = 1; i < FRAMES; ++i)
+                if (idade[i] < idade[frame]) frame = i;
+            tabela[ocupante[frame]] = -1;
+        }
         if (fseek(store, pagina*TAM, SEEK_SET) ||
             fread(memoria[frame], 1, TAM, store) != TAM) {
             fprintf(stderr, "Falha ao ler a página %d do backing store.\n", pagina);
             return 0;
         }
         tabela[pagina] = frame;
+        ocupante[frame] = pagina;
+        idade[frame] = total;
         ++faltas;
     }
+    if (pagina_lru) idade[frame] = total;
     return fprintf(saida, "Virtual address: %d TLB: %d Physical address: %d Value: %d\n",
                    addr, -1, frame*TAM + offset, memoria[frame][offset]) >= 0;
 }
@@ -58,6 +68,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "Uso: ./vm arquivo fifo|lru fifo|lru\n");
         return 1;
     }
+    pagina_lru = !strcmp(argv[2], "lru");
     FILE *entrada = fopen(argv[1], "rb");
     if (!entrada) { perror(argv[1]); return 1; }
     FILE *store = fopen("BACKING_STORE.bin", "rb");

@@ -25,3 +25,24 @@ TLB Hits = 0
 TLB Hit Rate = 0.000
 
 Script done on 2026-11-24 20:26:21-03:00 [COMMAND_EXIT_CODE="0"]
+Script started on 2026-11-24 20:26:36-03:00 [COMMAND="set -ex; make; for p in fifo lru; do ./vm ../addresses.txt $p fifo; tail -5 correct.txt; done" <not executed on terminal>]
++ make
+cc  -std=c11 -O2 -Wall -Wextra -Wpedantic -pthread vm.c -o vm 
++ for p in fifo lru
++ ./vm ../addresses.txt fifo fifo
++ tail -5 correct.txt
+Number of Translated Addresses = 1000
+Page Faults = 538
+Page Fault Rate = 0.538
+TLB Hits = 0
+TLB Hit Rate = 0.000
++ for p in fifo lru
++ ./vm ../addresses.txt lru fifo
++ tail -5 correct.txt
+Number of Translated Addresses = 1000
+Page Faults = 539
+Page Fault Rate = 0.539
+TLB Hits = 0
+TLB Hit Rate = 0.000
+
+Script done on 2026-11-24 20:26:37-03:00 [COMMAND_EXIT_CODE="0"]
