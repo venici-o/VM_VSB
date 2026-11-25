@@ -12,6 +12,33 @@ static int ocupante[FRAMES], pagina_lru;
 static size_t idade[FRAMES];
 static int8_t memoria[FRAMES][TAM];
 static size_t total, faltas, hits;
+enum { ENTRADAS = 16 };
+static struct {
+    int valida, pagina, frame;
+    size_t idade;
+} tlb[ENTRADAS];
+static int tlb_lru;
+
+static int buscar(int pagina)
+{
+    for (int i = 0; i < ENTRADAS; ++i)
+        if (tlb[i].valida && tlb[i].pagina == pagina) return i;
+    return -1;
+}
+
+static int inserir(int pagina, int frame)
+{
+    int slot = 0;
+    for (int i = 0; i < ENTRADAS; ++i) {
+        if (!tlb[i].valida) { slot = i; break; }
+        if (tlb[i].idade < tlb[slot].idade) slot = i;
+    }
+    tlb[slot].valida = 1;
+    tlb[slot].pagina = pagina;
+    tlb[slot].frame = frame;
+    tlb[slot].idade = total;
+    return slot;
+}
 
 static int politica(const char *s)
 {
@@ -37,7 +64,8 @@ static int endereco(const char *s, size_t n, int primeiro)
 static int traduzir(int addr, FILE *store, FILE *saida)
 {
     int pagina = addr / TAM, offset = addr % TAM;
-    int frame = tabela[pagina];
+    int slot = buscar(pagina);
+    int frame = slot >= 0 ? tlb[slot].frame : tabela[pagina];
     if (frame < 0) {
         if (usados < FRAMES) {
             frame = usados++;
@@ -46,6 +74,8 @@ static int traduzir(int addr, FILE *store, FILE *saida)
             for (int i = 1; i < FRAMES; ++i)
                 if (idade[i] < idade[frame]) frame = i;
             tabela[ocupante[frame]] = -1;
+            for (int i = 0; i < ENTRADAS; ++i)
+                if (tlb[i].frame == frame) tlb[i].valida = 0;
         }
         if (fseek(store, pagina*TAM, SEEK_SET) ||
             fread(memoria[frame], 1, TAM, store) != TAM) {
@@ -58,8 +88,13 @@ static int traduzir(int addr, FILE *store, FILE *saida)
         ++faltas;
     }
     if (pagina_lru) idade[frame] = total;
+    if (slot < 0) slot = inserir(pagina, frame);
+    else {
+        ++hits;
+        if (tlb_lru) tlb[slot].idade = total;
+    }
     return fprintf(saida, "Virtual address: %d TLB: %d Physical address: %d Value: %d\n",
-                   addr, -1, frame*TAM + offset, memoria[frame][offset]) >= 0;
+                   addr, slot, frame*TAM + offset, memoria[frame][offset]) >= 0;
 }
 
 int main(int argc, char **argv)
@@ -69,6 +104,7 @@ int main(int argc, char **argv)
         return 1;
     }
     pagina_lru = !strcmp(argv[2], "lru");
+    tlb_lru = !strcmp(argv[3], "lru");
     FILE *entrada = fopen(argv[1], "rb");
     if (!entrada) { perror(argv[1]); return 1; }
     FILE *store = fopen("BACKING_STORE.bin", "rb");
