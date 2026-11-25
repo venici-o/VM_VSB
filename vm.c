@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <pthread.h>
 
 enum { PAGINAS = 256, TAM = 256 };
 enum { FRAMES = 128 };
@@ -19,11 +20,33 @@ static struct {
 } tlb[ENTRADAS];
 static int tlb_lru;
 
-static int buscar(int pagina)
+struct Consulta { int slot, pagina, acerto; };
+
+static void *consultar_slot(void *arg)
 {
-    for (int i = 0; i < ENTRADAS; ++i)
-        if (tlb[i].valida && tlb[i].pagina == pagina) return i;
-    return -1;
+    struct Consulta *c = arg;
+    c->acerto = tlb[c->slot].valida && tlb[c->slot].pagina == c->pagina;
+    return NULL;
+}
+
+static int buscar(int pagina, int *slot)
+{
+    struct Consulta consultas[ENTRADAS];
+    pthread_t threads[ENTRADAS];
+    int criadas = 0, erro = 0;
+    *slot = -1;
+    for (; criadas < ENTRADAS; ++criadas) {
+        consultas[criadas] = (struct Consulta){criadas, pagina, 0};
+        erro = pthread_create(&threads[criadas], NULL, consultar_slot, &consultas[criadas]);
+        if (erro) break;
+    }
+    for (int i = 0; i < criadas; ++i) {
+        int e = pthread_join(threads[i], NULL);
+        if (e) { fprintf(stderr, "pthread_join: %s\n", strerror(e)); exit(1); }
+        if (consultas[i].acerto) *slot = i;
+    }
+    if (erro) fprintf(stderr, "pthread_create: %s\n", strerror(erro));
+    return !erro;
 }
 
 static int inserir(int pagina, int frame)
@@ -64,7 +87,8 @@ static int endereco(const char *s, size_t n, int primeiro)
 static int traduzir(int addr, FILE *store, FILE *saida)
 {
     int pagina = addr / TAM, offset = addr % TAM;
-    int slot = buscar(pagina);
+    int slot;
+    if (!buscar(pagina, &slot)) return 0;
     int frame = slot >= 0 ? tlb[slot].frame : tabela[pagina];
     if (frame < 0) {
         if (usados < FRAMES) {

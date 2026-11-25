@@ -69,3 +69,48 @@ TLB Hits = 54
 TLB Hit Rate = 0.054
 
 Script done on 2026-11-24 20:26:56-03:00 [COMMAND_EXIT_CODE="0"]
+Script started on 2026-11-24 20:27:21-03:00 [COMMAND="set -ex; make clean; make; for p in fifo lru; do for t in fifo lru; do ./vm ../addresses.txt $p $t; tail -5 correct.txt; done; done; ./vm ../addresses.txt lru fifo; diff -u <(sed "1s/^\xEF\xBB\xBF//;s/\r$//" ../correct.txt | awk 1) correct.txt" <not executed on terminal>]
++ make clean
+rm -f vm
++ make
+cc  -std=c11 -O2 -Wall -Wextra -Wpedantic -pthread vm.c -o vm 
++ for p in fifo lru
++ for t in fifo lru
++ ./vm ../addresses.txt fifo fifo
++ tail -5 correct.txt
+Number of Translated Addresses = 1000
+Page Faults = 538
+Page Fault Rate = 0.538
+TLB Hits = 54
+TLB Hit Rate = 0.054
++ for t in fifo lru
++ ./vm ../addresses.txt fifo lru
++ tail -5 correct.txt
+Number of Translated Addresses = 1000
+Page Faults = 538
+Page Fault Rate = 0.538
+TLB Hits = 55
+TLB Hit Rate = 0.055
++ for p in fifo lru
++ for t in fifo lru
++ ./vm ../addresses.txt lru fifo
++ tail -5 correct.txt
+Number of Translated Addresses = 1000
+Page Faults = 539
+Page Fault Rate = 0.539
+TLB Hits = 54
+TLB Hit Rate = 0.054
++ for t in fifo lru
++ ./vm ../addresses.txt lru lru
++ tail -5 correct.txt
+Number of Translated Addresses = 1000
+Page Faults = 539
+Page Fault Rate = 0.539
+TLB Hits = 55
+TLB Hit Rate = 0.055
++ ./vm ../addresses.txt lru fifo
++ diff -u /dev/fd/63 correct.txt
+++ sed '1s/^\xEF\xBB\xBF//;s/\r$//' ../correct.txt
+++ awk 1
+
+Script done on 2026-11-24 20:27:22-03:00 [COMMAND_EXIT_CODE="0"]
