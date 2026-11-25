@@ -114,3 +114,77 @@ TLB Hit Rate = 0.055
 ++ awk 1
 
 Script done on 2026-11-24 20:27:22-03:00 [COMMAND_EXIT_CODE="0"]
+Script started on 2026-11-24 20:27:34-03:00 [COMMAND="set -ex; d=$(mktemp -d); deve_falhar() { if "$@"; then return 1; fi; }; deve_falhar ./vm; deve_falhar ./vm ../addresses.txt clock fifo; deve_falhar ./vm "$d/ausente" lru fifo; touch "$d/entrada"; deve_falhar ./vm "$d/entrada" fifo fifo; printf "0\n65536\n" > "$d/entrada"; deve_falhar ./vm "$d/entrada" fifo fifo; printf "12x\n" > "$d/entrada"; deve_falhar ./vm "$d/entrada" fifo fifo; printf "0\n65535\n65535\n" > "$d/entrada"; ./vm "$d/entrada" fifo lru; cat correct.txt; grep -Fx "TLB Hits = 1" correct.txt; awk "BEGIN{for(i=0;i<128;i++)print i*256;print 0;print 32768;print 0}" > "$d/entrada"; ./vm "$d/entrada" fifo lru; grep -Fx "Page Faults = 130" correct.txt; ./vm "$d/entrada" lru fifo; grep -Fx "Page Faults = 129" correct.txt; rm -r "$d"" <not executed on terminal>]
+++ mktemp -d
++ d=/tmp/tmp.ewWvp6B9cl
++ deve_falhar ./vm
++ ./vm
+Uso: ./vm arquivo fifo|lru fifo|lru
++ deve_falhar ./vm ../addresses.txt clock fifo
++ ./vm ../addresses.txt clock fifo
+Uso: ./vm arquivo fifo|lru fifo|lru
++ deve_falhar ./vm /tmp/tmp.ewWvp6B9cl/ausente lru fifo
++ ./vm /tmp/tmp.ewWvp6B9cl/ausente lru fifo
+/tmp/tmp.ewWvp6B9cl/ausente: No such file or directory
++ touch /tmp/tmp.ewWvp6B9cl/entrada
++ deve_falhar ./vm /tmp/tmp.ewWvp6B9cl/entrada fifo fifo
++ ./vm /tmp/tmp.ewWvp6B9cl/entrada fifo fifo
+Arquivo de endereços vazio.
++ printf '0\n65536\n'
++ deve_falhar ./vm /tmp/tmp.ewWvp6B9cl/entrada fifo fifo
++ ./vm /tmp/tmp.ewWvp6B9cl/entrada fifo fifo
+Endereço inválido na linha 2.
++ printf '12x\n'
++ deve_falhar ./vm /tmp/tmp.ewWvp6B9cl/entrada fifo fifo
++ ./vm /tmp/tmp.ewWvp6B9cl/entrada fifo fifo
+Endereço inválido na linha 1.
++ printf '0\n65535\n65535\n'
++ ./vm /tmp/tmp.ewWvp6B9cl/entrada fifo lru
++ cat correct.txt
+Virtual address: 0 TLB: 0 Physical address: 0 Value: 0
+Virtual address: 65535 TLB: 1 Physical address: 511 Value: -1
+Virtual address: 65535 TLB: 1 Physical address: 511 Value: -1
+Number of Translated Addresses = 3
+Page Faults = 2
+Page Fault Rate = 0.667
+TLB Hits = 1
+TLB Hit Rate = 0.333
++ grep -Fx 'TLB Hits = 1' correct.txt
+TLB Hits = 1
++ awk 'BEGIN{for(i=0;i<128;i++)print i*256;print 0;print 32768;print 0}'
++ ./vm /tmp/tmp.ewWvp6B9cl/entrada fifo lru
++ grep -Fx 'Page Faults = 130' correct.txt
+Page Faults = 130
++ ./vm /tmp/tmp.ewWvp6B9cl/entrada lru fifo
++ grep -Fx 'Page Faults = 129' correct.txt
+Page Faults = 129
++ rm -r /tmp/tmp.ewWvp6B9cl
+
+Script done on 2026-11-24 20:27:34-03:00 [COMMAND_EXIT_CODE="0"]
+Script started on 2026-11-24 20:28:24-03:00 [COMMAND="set -ex; raiz=$PWD/..; d=$(mktemp -d); tar -xf /tmp/opencode/vsb-work/teste.tar -C "$d"; cd "$d"; cp "$raiz"/{addresses.txt,BACKING_STORE.bin,correct.txt} .; cd vsb; cp ../BACKING_STORE.bin .; make clean; make; ./vm ../addresses.txt lru fifo; diff -u <(sed "1s/^\xEF\xBB\xBF//;s/\r$//" ../correct.txt | awk 1) correct.txt; tail -5 correct.txt; cd /; rm -r "$d"" <not executed on terminal>]
++ raiz=/home/vinicio/Desktop/workspace/VM_VSB/vsb/..
+++ mktemp -d
++ d=/tmp/tmp.jwHmsfWaZB
++ tar -xf /tmp/opencode/vsb-work/teste.tar -C /tmp/tmp.jwHmsfWaZB
++ cd /tmp/tmp.jwHmsfWaZB
++ cp /home/vinicio/Desktop/workspace/VM_VSB/vsb/../addresses.txt /home/vinicio/Desktop/workspace/VM_VSB/vsb/../BACKING_STORE.bin /home/vinicio/Desktop/workspace/VM_VSB/vsb/../correct.txt .
++ cd vsb
++ cp ../BACKING_STORE.bin .
++ make clean
+rm -f vm
++ make
+cc  -std=c11 -O2 -Wall -Wextra -Wpedantic -pthread vm.c -o vm 
++ ./vm ../addresses.txt lru fifo
++ diff -u /dev/fd/63 correct.txt
+++ sed '1s/^\xEF\xBB\xBF//;s/\r$//' ../correct.txt
+++ awk 1
++ tail -5 correct.txt
+Number of Translated Addresses = 1000
+Page Faults = 539
+Page Fault Rate = 0.539
+TLB Hits = 54
+TLB Hit Rate = 0.054
++ cd /
++ rm -r /tmp/tmp.jwHmsfWaZB
+
+Script done on 2026-11-24 20:28:25-03:00 [COMMAND_EXIT_CODE="0"]
