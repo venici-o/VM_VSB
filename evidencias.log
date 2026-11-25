@@ -188,3 +188,49 @@ TLB Hit Rate = 0.054
 + rm -r /tmp/tmp.jwHmsfWaZB
 
 Script done on 2026-11-24 20:28:25-03:00 [COMMAND_EXIT_CODE="0"]
+Script started on 2026-11-24 23:23:46-03:00 [COMMAND="set -ex; cd "$D"; make clean; make; ./vm addresses.txt lru fifo; cp correct.txt referencia-local; printf " \t" >> addresses.txt; ./vm addresses.txt lru fifo; cmp referencia-local correct.txt; diff -u <(sed "1s/^\xEF\xBB\xBF//;s/\r$//" "$ROOT/correct.txt" | awk 1) correct.txt; tail -5 correct.txt; printf "\357\273\277 \t0 \r\n\t65535 \t" > limites; ./vm limites fifo fifo; grep -Fx "Number of Translated Addresses = 2" correct.txt; for valor in 12x 65536 "12 3" " " ""; do printf "0\n%s\n" "$valor" > invalido; if ./vm invalido lru fifo; then exit 1; fi; done" <not executed on terminal>]
++ cd /tmp/opencode/greep-fix.qDrkAX
++ make clean
+rm -f vm
++ make
+cc  -std=c11 -O2 -Wall -Wextra -Wpedantic -pthread vm.c -o vm 
++ ./vm addresses.txt lru fifo
++ cp correct.txt referencia-local
++ printf ' \t'
++ ./vm addresses.txt lru fifo
++ cmp referencia-local correct.txt
++ diff -u /dev/fd/63 correct.txt
+++ sed '1s/^\xEF\xBB\xBF//;s/\r$//' /home/vinicio/Desktop/workspace/VM_VSB/correct.txt
+++ awk 1
++ tail -5 correct.txt
+Number of Translated Addresses = 1000
+Page Faults = 539
+Page Fault Rate = 0.539
+TLB Hits = 54
+TLB Hit Rate = 0.054
++ printf '\357\273\277 \t0 \r\n\t65535 \t'
++ ./vm limites fifo fifo
++ grep -Fx 'Number of Translated Addresses = 2' correct.txt
+Number of Translated Addresses = 2
++ for valor in 12x 65536 "12 3" " " ""
++ printf '0\n%s\n' 12x
++ ./vm invalido lru fifo
+Endereço inválido na linha 2.
++ for valor in 12x 65536 "12 3" " " ""
++ printf '0\n%s\n' 65536
++ ./vm invalido lru fifo
+Endereço inválido na linha 2.
++ for valor in 12x 65536 "12 3" " " ""
++ printf '0\n%s\n' '12 3'
++ ./vm invalido lru fifo
+Endereço inválido na linha 2.
++ for valor in 12x 65536 "12 3" " " ""
++ printf '0\n%s\n' ' '
++ ./vm invalido lru fifo
+Endereço inválido na linha 2.
++ for valor in 12x 65536 "12 3" " " ""
++ printf '0\n%s\n' ''
++ ./vm invalido lru fifo
+Endereço inválido na linha 2.
+
+Script done on 2026-11-24 23:23:46-03:00 [COMMAND_EXIT_CODE="0"]

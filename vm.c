@@ -73,8 +73,9 @@ static int endereco(const char *s, size_t n, int primeiro)
 {
     size_t i = primeiro && n >= 3 && !memcmp(s, "\xef\xbb\xbf", 3) ? 3 : 0;
     int valor = 0;
-    if (n && s[n-1] == '\n') --n;
-    if (n && s[n-1] == '\r') --n;
+    while (i < n && (s[i] == ' ' || s[i] == '\t')) ++i;
+    while (n > i && (s[n-1] == ' ' || s[n-1] == '\t' ||
+                     s[n-1] == '\r' || s[n-1] == '\n')) --n;
     if (i == n) return -1;
     for (; i < n; ++i) {
         if (s[i] < '0' || s[i] > '9') return -1;
